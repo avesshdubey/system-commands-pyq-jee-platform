@@ -1,0 +1,6 @@
+# Roo Code / Cline Multi-Mode Adherence Rules for System Commands Platform
+
+1. **Architect Mode**: Plan schemas, syllabus taxonomy, API contracts, and component interfaces before implementing boilerplate.
+2. **Code Mode**: Write clean, modular, and typed Python / JavaScript. Adhere strictly to the established directory structure.
+3. **Debug Mode**: Never guess fixes. Follow systematic hypothesis-driven debugging: reproduce, inspect, confirm root cause, apply minimal fix, verify with tests.
+4. **Test Engineer Mode**: Build unit and integration tests in `tests/test_platform.py`. Never declare features complete without verified tests passing.

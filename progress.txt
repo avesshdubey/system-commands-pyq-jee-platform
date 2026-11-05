@@ -1,0 +1,7 @@
+# Ralph Loop Progress Log - System Commands PYQ & JEE CBT Platform
+Initialized: 2026-11-05
+Working Directory: C:\Users\avesh\Desktop\system-commands-pyq-jee-platform
+Source PYQ Papers: C:\Users\avesh\Desktop\PYQS
+Git Remote: https://github.com/avesshdubey/system-commands-pyq-jee-platform
+Stack: Python 3.13, PyMuPDF (fitz), ReportLab, HTML5, CSS3, JavaScript
+--------------------------------------------------------------------------------
