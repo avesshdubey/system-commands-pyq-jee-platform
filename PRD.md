@@ -38,3 +38,10 @@
   - Write test suite `tests/test_platform.py` verifying question schema, PDF integrity, image resolution, and application assets (all 6 tests passing).
   - Run CodeRabbit code review audit (`coderabbit review --agent`) and fix any flagged issues.
   - Commit atomic changes and auto-push upstream to GitHub remote.
+
+- [x] **Task 7: Robust Authentication Gate & Multi-Identifier Login Fix**
+  - Fix login system to support both Email address (`student@iitm.ac.in`) and IITM Roll Number (`24DS109284`, `ADMIN-001`) case-insensitively.
+  - Eliminate stale global references by implementing universal `getAuth()` and `getAdmin()` helper accessors in `js/jee_app.js`.
+  - Fix Quick Demo login buttons for instant single-click sign-in for Demo Student and Demo Admin.
+  - Implement full New Student Registration validation with duplicate account prevention and automatic session transition.
+  - Add Node.js and Python integration test (`test_07_auth_system_and_roles`) in `tests/test_platform.py` (all 7 tests passing).

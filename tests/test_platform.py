@@ -96,5 +96,70 @@ class TestSystemCommandsPlatform(unittest.TestCase):
         self.assertIn("btnQuickRandom", html)
         self.assertIn("btnFooterRandom", html)
 
+    def test_07_auth_system_and_roles(self):
+        auth_js_path = os.path.join(PROJECT_ROOT, "js", "auth.js")
+        jee_app_path = os.path.join(PROJECT_ROOT, "js", "jee_app.js")
+        with open(auth_js_path, "r", encoding="utf-8") as f:
+            auth_src = f.read()
+        with open(jee_app_path, "r", encoding="utf-8") as f:
+            jee_src = f.read()
+
+        # Check export bindings
+        self.assertIn("root.SCAuth = authInstance;", auth_src)
+        self.assertIn("root.Auth = authInstance;", auth_src)
+        self.assertIn("getAuth()", jee_src)
+        self.assertIn("getAdmin()", jee_src)
+
+        # Run Node.js test harness against auth.js
+        node_script = """
+        const storage = {};
+        global.localStorage = {
+            getItem: (k) => storage[k] || null,
+            setItem: (k, v) => { storage[k] = String(v); },
+            removeItem: (k) => { delete storage[k]; }
+        };
+        global.sessionStorage = Object.assign({}, global.localStorage);
+        const Auth = require('./js/auth.js');
+
+        // Test 1: Email login
+        const r1 = Auth.login('student@iitm.ac.in', 'Student@123', true);
+        if (!r1.success || r1.user.rollNo !== '24DS109284') process.exit(1);
+
+        // Test 2: Roll number login
+        const r2 = Auth.login('24DS109284', 'Student@123', true);
+        if (!r2.success || r2.user.email !== 'student@iitm.ac.in') process.exit(2);
+
+        // Test 3: Admin roll number login case-insensitively
+        const r3 = Auth.login('admin-001', 'Admin@123', true);
+        if (!r3.success || r3.user.role !== 'admin') process.exit(3);
+
+        // Test 4: Wrong credentials
+        const r4 = Auth.login('student@iitm.ac.in', 'WrongPass!', true);
+        if (r4.success) process.exit(4);
+
+        // Test 5: Signup
+        const s1 = Auth.signUp('Automation User', 'auto@iitm.ac.in', '24DS888777', 'Pass@123', 'student');
+        if (!s1.success || s1.user.rollNo !== '24DS888777') process.exit(5);
+
+        // Test 6: Duplicate prevention
+        const s2 = Auth.signUp('Automation User', 'auto@iitm.ac.in', '24DS888777', 'Pass@123', 'student');
+        if (s2.success) process.exit(6);
+
+        // Test 7: Logout
+        Auth.logout();
+        if (Auth.getCurrentUser() !== null) process.exit(7);
+
+        console.log('ALL_AUTH_CHECKS_PASSED');
+        """
+        import subprocess
+        res = subprocess.run(
+            ["node", "-e", node_script],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True
+        )
+        self.assertEqual(res.returncode, 0, f"Auth test harness failed: {res.stderr}\n{res.stdout}")
+        self.assertIn("ALL_AUTH_CHECKS_PASSED", res.stdout)
+
 if __name__ == "__main__":
     unittest.main()

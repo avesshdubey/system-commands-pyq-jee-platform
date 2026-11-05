@@ -34,3 +34,11 @@ Stack: Python 3.13, PyMuPDF (fitz), WinRT OCR, ReportLab, HTML5, CSS3, JavaScrip
 [2026-11-05 22:15] Milestone 5 - Automated Test Verification & QA:
 - Created tests/test_platform.py with 6 comprehensive test cases.
 - All 6 tests passing (schema integrity, card images, week distribution, PDF publication, and web assets).
+
+[2026-11-05 22:30] Milestone 6 - Authentication & Role-Based Access Control Fix:
+- Resolved namespace reference breakage by adding unified getAuth() and getAdmin() accessors in js/jee_app.js.
+- Implemented dual-identifier login in js/auth.js accepting both Email and IITM Roll Number case-insensitively.
+- Bound and verified Quick Demo Sign-in buttons (Student: Avesh Dubey / 24DS109284, Faculty Admin: ADMIN-001).
+- Handled New Student Registration with duplicate validation, auto-generated candidate ID, and seamless exam transition.
+- Standardized logout flow with confirmation dialog and state cleanup.
+- Added test_07_auth_system_and_roles to tests/test_platform.py; all 7 tests passed green in 0.386s.

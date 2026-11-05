@@ -1,6 +1,14 @@
-// JEE Examination CBT Engine - Machine Learning Techniques (MLT)
+// JEE Examination CBT Engine - System Commands (Linux / Bash)
 (function () {
     'use strict';
+
+    function getAuth() {
+        return window.SCAuth || window.Auth || window.MLTAuth || window.MLFAuth;
+    }
+
+    function getAdmin() {
+        return window.SCAdmin || window.Admin || window.MLTAdmin || window.MLFAdmin;
+    }
 
     // State Variables
     let allQuestions = [];
@@ -175,7 +183,7 @@
 
     // ==================== AUTHENTICATION & ROLE GUARDS ====================
     function checkAuthAndSetupUI() {
-        const Auth = window.SCAuth || window.Auth || window.MLTAuth;
+        const Auth = getAuth();
         if (!Auth) return;
 
         const curUser = Auth.getCurrentUser();
@@ -190,7 +198,7 @@
             if (curUser.role === 'admin') {
                 elements.btnToggleAdminView.style.display = 'inline-block';
                 // Initialize Admin Controller
-                const Admin = window.SCAdmin || window.Admin || window.MLTAdmin;
+                const Admin = getAdmin();
                 if (Admin) {
                     Admin.init(allQuestions);
                 }
@@ -286,11 +294,11 @@
     }
 
     function updatePaletteSecLabel() {
-        let label = 'All Questions';
-        if (currentWeekFilter === 'Week 1') label = 'Week 1: Introduction & PCA';
-        else if (currentWeekFilter === 'Week 2') label = 'Week 2: Kernel PCA';
-        else if (currentWeekFilter === 'Week 3') label = 'Week 3: Clustering (K-means)';
-        else if (currentWeekFilter === 'Week 4') label = 'Week 4: Estimation & GMM';
+        let label = 'All System Commands';
+        if (currentWeekFilter === 'Week 1') label = 'Week 1: Shell & Basics';
+        else if (currentWeekFilter === 'Week 2') label = 'Week 2: Permissions & Streams';
+        else if (currentWeekFilter === 'Week 3') label = 'Week 3: Filters, Grep & Awk';
+        else if (currentWeekFilter === 'Week 4') label = 'Week 4: Scripting & Processes';
         
         if (currentSubtopicFilter !== 'ALL') {
             label += ` (${currentSubtopicFilter})`;
@@ -301,7 +309,7 @@
     function startTimer() {
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(() => {
-            const Auth = window.MLTAuth || window.MLFAuth;
+            const Auth = getAuth();
             const curUser = Auth ? Auth.getCurrentUser() : null;
             const isExamActive = curUser && elements.examInterfaceView && elements.examInterfaceView.style.display !== 'none' && !isExamSubmitted;
             
@@ -919,7 +927,7 @@
                     totalScore += earned;
                     categoryStats[w][st].correct++;
                 } else {
-                    earned = 0; // Section Negative Marks : 0 in IITM MLF
+                    earned = 0; // Section Negative Marks : 0 in IITM System Commands
                     categoryStats[w][st].incorrect++;
                 }
             }
@@ -937,8 +945,8 @@
 
         // Record Test Attempt in Auth & Admin storage
         const accuracy = attemptedCount > 0 ? Math.round((correctCount / attemptedCount) * 100) : 0;
-        const Auth = window.MLTAuth || window.MLFAuth;
-        const Admin = window.MLTAdmin || window.MLFAdmin;
+        const Auth = getAuth();
+        const Admin = getAdmin();
         if (Auth) {
             Auth.recordTestAttempt({
                 section: 'Full Syllabus (All Weeks)',
@@ -1261,12 +1269,16 @@
             const passVal = document.getElementById('loginPassword').value;
             const rememberMe = document.getElementById('loginRememberMe').checked;
 
-            const Auth = window.MLTAuth || window.MLFAuth;
+            const Auth = getAuth();
+            if (!Auth) {
+                showAuthAlert('Authentication module failed to load.');
+                return;
+            }
             const res = Auth.login(idVal, passVal, rememberMe);
             if (res.success) {
                 checkAuthAndSetupUI();
             } else {
-                showAuthAlert(res.error || 'Login failed.');
+                showAuthAlert(res.error || res.message || 'Login failed.');
             }
         });
 
@@ -1279,12 +1291,16 @@
             const password = document.getElementById('signupPassword').value;
             const role = document.getElementById('signupRole').value;
 
-            const Auth = window.MLTAuth || window.MLFAuth;
+            const Auth = getAuth();
+            if (!Auth) {
+                showAuthAlert('Authentication module failed to load.');
+                return;
+            }
             const res = Auth.signUp(name, email, rollNo, password, role);
             if (res.success) {
                 checkAuthAndSetupUI();
             } else {
-                showAuthAlert(res.error || 'Registration failed.');
+                showAuthAlert(res.error || res.message || 'Registration failed.');
             }
         });
 
@@ -1292,24 +1308,30 @@
         elements.btnQuickStudent.addEventListener('click', () => {
             document.getElementById('loginIdentifier').value = 'student@iitm.ac.in';
             document.getElementById('loginPassword').value = 'Student@123';
-            const Auth = window.MLTAuth || window.MLFAuth;
-            const res = Auth.login('student@iitm.ac.in', 'Student@123', true);
-            if (res.success) checkAuthAndSetupUI();
+            const Auth = getAuth();
+            if (Auth) {
+                const res = Auth.login('student@iitm.ac.in', 'Student@123', true);
+                if (res.success) checkAuthAndSetupUI();
+                else showAuthAlert(res.error || res.message || 'Login failed.');
+            }
         });
 
         elements.btnQuickAdmin.addEventListener('click', () => {
             document.getElementById('loginIdentifier').value = 'admin@iitm.ac.in';
             document.getElementById('loginPassword').value = 'Admin@123';
-            const Auth = window.MLTAuth || window.MLFAuth;
-            const res = Auth.login('admin@iitm.ac.in', 'Admin@123', true);
-            if (res.success) checkAuthAndSetupUI();
+            const Auth = getAuth();
+            if (Auth) {
+                const res = Auth.login('admin@iitm.ac.in', 'Admin@123', true);
+                if (res.success) checkAuthAndSetupUI();
+                else showAuthAlert(res.error || res.message || 'Login failed.');
+            }
         });
 
         // Logout
         elements.btnLogout.addEventListener('click', () => {
-            if (confirm("Sign out of MLT CBT portal?")) {
-                const Auth = window.MLTAuth || window.MLFAuth;
-                Auth.logout();
+            if (confirm("Sign out of System Commands CBT portal?")) {
+                const Auth = getAuth();
+                if (Auth) Auth.logout();
                 resetExamState();
                 elements.authModal.style.display = 'flex';
                 elements.btnToggleAdminView.style.display = 'none';
@@ -1327,7 +1349,7 @@
             elements.adminDashboardView.style.display = 'block';
             elements.btnToggleAdminView.style.display = 'none';
             elements.btnToggleExamView.style.display = 'inline-block';
-            const Admin = window.MLTAdmin || window.MLFAdmin;
+            const Admin = getAdmin();
             if (Admin) {
                 Admin.renderOverview();
                 Admin.renderUsersTable();
@@ -1341,7 +1363,7 @@
         elements.btnToggleExamView.addEventListener('click', () => {
             elements.adminDashboardView.style.display = 'none';
             elements.btnToggleExamView.style.display = 'none';
-            const Auth = window.MLTAuth || window.MLFAuth;
+            const Auth = getAuth();
             const curUser = Auth ? Auth.getCurrentUser() : null;
             if (curUser && curUser.role === 'admin') {
                 elements.btnToggleAdminView.style.display = 'inline-block';

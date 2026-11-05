@@ -7,6 +7,8 @@
     } else {
         root.SCAdmin = factory(root.SCAuth || root.Auth);
         root.Admin = root.SCAdmin;
+        root.MLTAdmin = root.SCAdmin;
+        root.MLFAdmin = root.SCAdmin;
     }
 }(typeof self !== 'undefined' ? self : this, function (Auth) {
     'use strict';

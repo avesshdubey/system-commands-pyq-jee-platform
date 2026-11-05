@@ -5,8 +5,11 @@
     } else if (typeof module === 'object' && module.exports) {
         module.exports = factory();
     } else {
-        root.SCAuth = factory();
-        root.Auth = root.SCAuth;
+        const authInstance = factory();
+        root.SCAuth = authInstance;
+        root.Auth = authInstance;
+        root.MLTAuth = authInstance;
+        root.MLFAuth = authInstance;
     }
 }(typeof self !== 'undefined' ? self : this, function () {
     'use strict';
@@ -82,11 +85,11 @@
                     userRoll: '24DS109284',
                     timestamp: '2026-11-04T16:20:00Z',
                     section: 'All Weeks',
-                    totalQuestions: 220,
+                    totalQuestions: 189,
                     attempted: 30,
                     correct: 25,
                     score: 75,
-                    maxMarks: 660,
+                    maxMarks: 567,
                     accuracy: 83.3,
                     timeSpent: '45 mins'
                 },
@@ -97,11 +100,11 @@
                     userRoll: '24DS105412',
                     timestamp: '2026-11-05T09:10:00Z',
                     section: 'Week 2: File System Hierarchy, Permissions, Redirection & Links',
-                    totalQuestions: 65,
+                    totalQuestions: 21,
                     attempted: 20,
                     correct: 16,
                     score: 48,
-                    maxMarks: 195,
+                    maxMarks: 63,
                     accuracy: 80.0,
                     timeSpent: '30 mins'
                 }
@@ -110,62 +113,142 @@
         }
     }
 
+    function getUsersList() {
+        try {
+            seedDefaultUsers();
+            return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function setUsersList(users) {
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+
+    function getAttemptsList() {
+        try {
+            return JSON.parse(localStorage.getItem(ATTEMPTS_KEY)) || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function setAttemptsList(attempts) {
+        localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(attempts));
+    }
+
     // Initialize on load
     seedDefaultUsers();
 
-    return {
+    const Auth = {
+        init: function () {
+            seedDefaultUsers();
+        },
+
         getUsers: function () {
-            try {
-                return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-            } catch (e) {
-                return [];
-            }
+            return getUsersList();
+        },
+
+        getAllUsers: function () {
+            return getUsersList().map(u => {
+                const safe = Object.assign({}, u);
+                delete safe.password;
+                return safe;
+            });
         },
 
         getCurrentUser: function () {
             try {
-                const s = localStorage.getItem(SESSION_KEY);
-                return s ? JSON.parse(s) : null;
+                const sessionStr = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+                return sessionStr ? JSON.parse(sessionStr) : null;
             } catch (e) {
                 return null;
             }
         },
 
-        login: function (email, password) {
-            const users = this.getUsers();
-            const cleanEmail = (email || '').trim().toLowerCase();
-            const user = users.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
-            if (user) {
-                if (user.status === 'suspended') {
-                    return { success: false, message: 'Account is suspended. Please contact administrator.' };
-                }
-                const sessionUser = {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    rollNo: user.rollNo,
-                    role: user.role
-                };
-                localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-                return { success: true, user: sessionUser };
+        // Supports Email OR Roll Number, case-insensitive
+        login: function (identifier, password, rememberMe) {
+            seedDefaultUsers();
+            const users = getUsersList();
+            const cleanId = (identifier || '').trim().toLowerCase();
+            const cleanPass = (password || '').trim();
+
+            const user = users.find(u => 
+                (u.email.toLowerCase() === cleanId || (u.rollNo && u.rollNo.toLowerCase() === cleanId)) &&
+                u.password === cleanPass
+            );
+
+            if (!user) {
+                return { success: false, error: 'Invalid Email/Roll Number or Password.', message: 'Invalid Email/Roll Number or Password.' };
             }
-            return { success: false, message: 'Invalid email address or password.' };
+
+            if (user.status === 'suspended') {
+                return { success: false, error: 'This user account has been suspended by the administrator.', message: 'This user account has been suspended.' };
+            }
+
+            const safeUser = Object.assign({}, user);
+            delete safeUser.password;
+
+            const sessionData = JSON.stringify(safeUser);
+            sessionStorage.setItem(SESSION_KEY, sessionData);
+            if (rememberMe) {
+                localStorage.setItem(SESSION_KEY, sessionData);
+            }
+
+            return { success: true, user: safeUser };
         },
 
-        signup: function (userData) {
-            const users = this.getUsers();
-            const cleanEmail = (userData.email || '').trim().toLowerCase();
-            if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
-                return { success: false, message: 'An account with this email already exists.' };
+        // Universal sign-up supporting both object and positional arguments
+        signUp: function (nameOrData, email, rollNo, password, role) {
+            seedDefaultUsers();
+            const users = getUsersList();
+
+            let name, mail, roll, pass, rle;
+            if (typeof nameOrData === 'object' && nameOrData !== null) {
+                name = nameOrData.name;
+                mail = nameOrData.email;
+                roll = nameOrData.rollNo;
+                pass = nameOrData.password;
+                rle = nameOrData.role;
+            } else {
+                name = nameOrData;
+                mail = email;
+                roll = rollNo;
+                pass = password;
+                rle = role;
+            }
+
+            const cleanName = (name || '').trim();
+            const cleanEmail = (mail || '').trim().toLowerCase();
+            const cleanRoll = (roll || '').trim().toUpperCase() || ('24DS' + Math.floor(100000 + Math.random() * 900000));
+            const cleanPass = (pass || '').trim();
+
+            if (!cleanName || cleanName.length < 2) {
+                return { success: false, error: 'Please enter a valid full name.', message: 'Please enter a valid full name.' };
+            }
+            if (!cleanEmail || !cleanEmail.includes('@')) {
+                return { success: false, error: 'Please enter a valid email address.', message: 'Please enter a valid email address.' };
+            }
+            if (!cleanPass || cleanPass.length < 6) {
+                return { success: false, error: 'Password must be at least 6 characters long.', message: 'Password must be at least 6 characters long.' };
+            }
+
+            // Check duplicates
+            const exists = users.some(u => 
+                u.email.toLowerCase() === cleanEmail || (u.rollNo && u.rollNo.toUpperCase() === cleanRoll)
+            );
+            if (exists) {
+                return { success: false, error: 'An account with this Email or Roll Number already exists.', message: 'An account with this Email or Roll Number already exists.' };
             }
 
             const newUser = {
                 id: 'usr_' + Date.now().toString(36),
-                name: userData.name.trim(),
+                name: cleanName,
                 email: cleanEmail,
-                rollNo: (userData.rollNo || '24DS' + Math.floor(100000 + Math.random() * 900000)).trim().toUpperCase(),
-                password: userData.password,
-                role: userData.role || 'student',
+                rollNo: cleanRoll,
+                password: cleanPass,
+                role: rle === 'admin' ? 'admin' : 'student',
                 status: 'active',
                 createdAt: new Date().toISOString(),
                 testsTaken: 0,
@@ -173,100 +256,118 @@
             };
 
             users.push(newUser);
-            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            setUsersList(users);
 
-            const sessionUser = {
-                id: newUser.id,
-                name: newUser.name,
-                email: newUser.email,
-                rollNo: newUser.rollNo,
-                role: newUser.role
-            };
-            localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-            return { success: true, user: sessionUser };
+            const safeUser = Object.assign({}, newUser);
+            delete safeUser.password;
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(safeUser));
+            localStorage.setItem(SESSION_KEY, JSON.stringify(safeUser));
+
+            return { success: true, user: safeUser };
+        },
+
+        // Alias for signup
+        signup: function (a, b, c, d, e) {
+            return this.signUp(a, b, c, d, e);
         },
 
         logout: function () {
+            sessionStorage.removeItem(SESSION_KEY);
             localStorage.removeItem(SESSION_KEY);
+            return true;
         },
 
         addUser: function (userData) {
-            const users = this.getUsers();
-            const cleanEmail = (userData.email || '').trim().toLowerCase();
-            if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
-                return { success: false, message: 'Email already exists.' };
-            }
-            const newUser = {
-                id: 'usr_' + Date.now().toString(36),
-                name: userData.name.trim(),
-                email: cleanEmail,
-                rollNo: (userData.rollNo || '24DS' + Math.floor(100000 + Math.random() * 900000)).trim().toUpperCase(),
-                password: userData.password || 'Student@123',
-                role: userData.role || 'student',
-                status: userData.status || 'active',
-                createdAt: new Date().toISOString(),
-                testsTaken: 0,
-                bestScore: 0
-            };
-            users.push(newUser);
-            localStorage.setItem(USERS_KEY, JSON.stringify(users));
-            return { success: true, user: newUser };
+            return this.signUp(userData);
+        },
+
+        addUserByAdmin: function (userData) {
+            return this.signUp(
+                userData.name,
+                userData.email,
+                userData.rollNo,
+                userData.password || 'Student@123',
+                userData.role || 'student'
+            );
         },
 
         deleteUser: function (userId) {
-            let users = this.getUsers();
+            let users = getUsersList();
             const currentUser = this.getCurrentUser();
             if (currentUser && currentUser.id === userId) {
-                return { success: false, message: 'You cannot delete the active session user.' };
+                return { success: false, error: 'Cannot delete active session user.', message: 'Cannot delete active session user.' };
             }
             users = users.filter(u => u.id !== userId);
-            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            setUsersList(users);
             return { success: true };
         },
 
         resetPassword: function (userId, newPassword) {
-            const users = this.getUsers();
+            const users = getUsersList();
             const u = users.find(x => x.id === userId);
             if (u) {
-                u.password = newPassword;
-                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+                u.password = newPassword.trim();
+                setUsersList(users);
                 return { success: true };
             }
-            return { success: false, message: 'User not found.' };
+            return { success: false, error: 'User not found.', message: 'User not found.' };
+        },
+
+        toggleUserStatus: function (userId) {
+            const users = getUsersList();
+            const u = users.find(x => x.id === userId);
+            if (u) {
+                u.status = u.status === 'suspended' ? 'active' : 'suspended';
+                setUsersList(users);
+                return { success: true, status: u.status };
+            }
+            return { success: false, error: 'User not found.' };
         },
 
         getAttempts: function () {
-            try {
-                return JSON.parse(localStorage.getItem(ATTEMPTS_KEY)) || [];
-            } catch (e) {
-                return [];
-            }
+            return getAttemptsList();
         },
 
         saveAttempt: function (attempt) {
-            const attempts = this.getAttempts();
+            const attempts = getAttemptsList();
             const newAttempt = Object.assign({
                 id: 'att_' + Date.now().toString(36),
                 timestamp: new Date().toISOString()
             }, attempt);
             attempts.unshift(newAttempt);
-            localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(attempts));
+            setAttemptsList(attempts);
 
             // Update user stats
-            const users = this.getUsers();
+            const users = getUsersList();
             const u = users.find(x => x.id === attempt.userId);
             if (u) {
                 u.testsTaken = (u.testsTaken || 0) + 1;
                 if ((attempt.score || 0) > (u.bestScore || 0)) {
                     u.bestScore = attempt.score;
                 }
-                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+                setUsersList(users);
             }
             return newAttempt;
         },
 
+        recordTestAttempt: function (attempt) {
+            return this.saveAttempt(attempt);
+        },
+
         clearAttempts: function () {
-            localStorage.setItem(ATTEMPTS_KEY, JSON.stringify([]));
+            setAttemptsList([]);
+            return true;
+        },
+
+        resetAllData: function () {
+            localStorage.removeItem(USERS_KEY);
+            localStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem(ATTEMPTS_KEY);
+            seedDefaultUsers();
+            return true;
         }
     };
+
+    return Auth;
 }));
