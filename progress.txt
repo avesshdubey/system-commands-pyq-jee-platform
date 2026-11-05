@@ -3,5 +3,34 @@ Initialized: 2026-11-05
 Working Directory: C:\Users\avesh\Desktop\system-commands-pyq-jee-platform
 Source PYQ Papers: C:\Users\avesh\Desktop\PYQS
 Git Remote: https://github.com/avesshdubey/system-commands-pyq-jee-platform
-Stack: Python 3.13, PyMuPDF (fitz), ReportLab, HTML5, CSS3, JavaScript
+Live GitHub Pages: https://avesshdubey.github.io/system-commands-pyq-jee-platform/
+Stack: Python 3.13, PyMuPDF (fitz), WinRT OCR, ReportLab, HTML5, CSS3, JavaScript
 --------------------------------------------------------------------------------
+
+[2026-11-05 21:50] Milestone 1 - Baseline Setup & Remote Linking:
+- Initialized local Git repository on main branch.
+- Created public remote repository on GitHub: https://github.com/avesshdubey/system-commands-pyq-jee-platform.
+- Enabled GitHub Pages on main branch.
+
+[2026-11-05 22:05] Milestone 2 - Extraction, OCR Enrichment & Deduplication:
+- Scanned 69 question papers across 2022-2025; identified all 34 papers containing the official System Commands section.
+- Extracted 576 raw question occurrences.
+- Filtered out 0-mark subject confirmation prompts.
+- Leveraged Windows Native OCR (winrt) to transcribe 423 questions with image code blocks.
+- Solved multi-page question options spanning 3 pages (SC_060, SC_089, SC_093, SC_099, SC_104, SC_110).
+- Deduplicated parallel exam slots into 189 unique, authentic questions across all 4 weeks.
+- Week 1: 75 Qs | Week 2: 21 Qs | Week 3: 53 Qs | Week 4: 40 Qs across 18 granular subtopics.
+
+[2026-11-05 22:10] Milestone 3 - Categorized Publication PDF Compilation:
+- Built scripts/generate_pdf.py with ReportLab NumberedCanvas, running headers/footers, and visual cards.
+- Compiled system_commands_questions_categorized.pdf (14.09 MB).
+
+[2026-11-05 22:12] Milestone 4 - JEE CBT Examination Platform & Admin Panel:
+- Developed index.html, css/jee_style.css, js/auth.js, js/admin.js, and js/jee_app.js.
+- Embedded Student & Admin authentication with persistent local storage.
+- Added Admin Control Panel with KPI cards, syllabus diagnostics, question bank explorer, and CSV export.
+- Implemented Random Question revision mode ("🎲 Random Question" / "Quick Random Practice") across headers, metadata bar, palette subfilter, and footer.
+
+[2026-11-05 22:15] Milestone 5 - Automated Test Verification & QA:
+- Created tests/test_platform.py with 6 comprehensive test cases.
+- All 6 tests passing (schema integrity, card images, week distribution, PDF publication, and web assets).

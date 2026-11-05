@@ -1,0 +1,31 @@
+{
+  "totalQuestions": 189,
+  "totalRawQuestions": 467,
+  "totalValidQuestions": 467,
+  "weekDistribution": {
+    "Week 1: Introduction to Operating Systems, Shell & Basic Commands": 75,
+    "Week 4: Shell Scripting, Environment Variables & Process Management": 40,
+    "Week 3: Text Processing Filters, Grep/Regex, Sed & Awk": 53,
+    "Week 2: File System Hierarchy, Permissions, Redirection & Links": 21
+  },
+  "subtopicDistribution": {
+    "1.2 Directory Navigation & Pathnames": 8,
+    "1.1 OS Architecture, Linux Kernel & Shell Basics": 47,
+    "4.2 Shell Scripting: Conditionals & Test Operators": 23,
+    "1.4 Viewing File Contents": 2,
+    "3.3 Pattern Searching with Grep & Regular Expressions": 30,
+    "4.4 Process Management & Signals": 3,
+    "3.2 Finding Files & Path Searches": 9,
+    "2.1 File System Hierarchy Standard (FHS)": 2,
+    "2.4 I/O Redirection & Standard Streams": 7,
+    "2.6 Hard Links & Symbolic Links": 7,
+    "4.3 Shell Scripting: Loops, Functions & Positional Parameters": 10,
+    "1.5 File Metadata & Listing Attributes": 12,
+    "2.2 File Permissions & Ownership": 5,
+    "1.3 File & Directory Operations": 6,
+    "3.1 Text Processing Filters": 9,
+    "4.1 Shell Variables, Environment & Quoting": 3,
+    "3.4 Stream Editing with Sed": 5,
+    "4.5 Task Scheduling, Archiving & Compression": 1
+  }
+}
